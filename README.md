@@ -1,6 +1,6 @@
 # AI Digest
 
-A self-hosted Python agent that reads three AI newsletters every morning, filters and ranks stories by relevance to your professional focus, and emails you a curated briefing before your day starts.
+A self-hosted Python agent that reads four AI newsletters every morning, filters and ranks stories by relevance to your professional focus, and emails you a curated briefing before your day starts.
 
 Runs on your Mac with a single cron job. No subscriptions, no SaaS dependencies — just a Python script, an API key, and your Gmail account.
 
@@ -22,8 +22,9 @@ Runs on your Mac with a single cron job. No subscriptions, no SaaS dependencies 
 │                    FETCH                                     │
 │                                                              │
 │   The Rundown AI ──┐                                         │
-│   Superhuman AI  ──┼──▶  Raw newsletter text (3 sources)     │
-│   TLDR AI ─────────┘                                         │
+│   Superhuman AI  ──┤                                         │
+│   TLDR AI ─────────┼──▶  Raw newsletter text (4 sources)     │
+│   The Neuron ──────┘                                         │
 └──────────────┬───────────────────────────────────────────────┘
                │
                ▼
@@ -63,16 +64,16 @@ AI Digest uses the Anthropic API. Here's what a typical run costs:
 
 | Component | Tokens | Rate | Cost |
 |-----------|--------|------|------|
-| Input (system prompt + newsletter text) | ~6,400 | $3.00 / MTok | $0.019 |
-| Output (structured JSON digest) | ~2,000 | $15.00 / MTok | $0.030 |
-| **Total per run** | | | **$0.049** |
+| Input (system prompt + newsletter text) | ~8,500 | $3.00 / MTok | $0.026 |
+| Output (structured JSON digest) | ~2,500 | $15.00 / MTok | $0.038 |
+| **Total per run** | | | **$0.063** |
 
 ### Projected Annual Cost
 
 | Frequency | Model | Annual Cost |
 |-----------|-------|-------------|
-| Weekdays (260 runs/yr) | Claude Sonnet 4.6 | **~$12.78** |
-| Weekdays (260 runs/yr) | Claude Haiku 4.5 | **~$4.26** |
+| Weekdays (260 runs/yr) | Claude Sonnet 4.6 | **~$16.38** |
+| Weekdays (260 runs/yr) | Claude Haiku 4.5 | **~$5.46** |
 
 To switch to Haiku for lower cost, change `_MODEL` in `src/digest.py` to `"claude-haiku-4-20250506"`.
 
@@ -84,7 +85,7 @@ To switch to Haiku for lower cost, change `_MODEL` in `src/digest.py` to `"claud
 | Python 3.9+ | Pre-installed on macOS |
 | `certifi` package | Free |
 
-**Total cost of ownership: approximately $5–$13 per year** depending on your model choice.
+**Total cost of ownership: approximately $6–$17 per year** depending on your model choice.
 
 ---
 
@@ -208,8 +209,9 @@ To re-run setup: `python3 setup_config.py`
 | [The Rundown AI](https://www.therundown.ai) | 2M+ | Daily AI news, tools, and industry developments |
 | [Superhuman AI](https://www.superhuman.ai) | 1.5M+ | AI tools, tutorials, and productivity workflows |
 | [TLDR AI](https://tldr.tech/ai) | 500K+ | AI research, tools, and machine learning news |
+| [The Neuron](https://www.theneurondaily.com) | 600K+ | AI trends, tools, and business applications |
 
-The agent fetches the latest issue from each source's public archive. If a source is unavailable on a given day, the digest proceeds with the remaining sources (minimum 2 of 3 required).
+The agent fetches the latest issue from each source's public archive. If a source is unavailable on a given day, the digest proceeds with the remaining sources (minimum 2 of 4 required).
 
 ---
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """AI Digest — entry point.
 
-Fetches the latest issues of The Rundown AI, TLDR AI, and Superhuman AI,
-builds a curated digest via Claude, and emails it to the configured recipient.
-A local copy is saved to ~/.ai-digest/digests/.
+Fetches the latest issues of The Rundown AI, TLDR AI, Superhuman AI, and
+The Neuron, builds a curated digest via Claude, and emails it to the
+configured recipient. A local copy is saved to ~/.ai-digest/digests/.
 """
 
 import logging
@@ -12,7 +12,7 @@ from datetime import date
 from pathlib import Path
 
 from src.config import load_config, ConfigError, CONFIG_DIR
-from src.fetchers import fetch_rundown_ai, fetch_tldr_ai, fetch_superhuman_ai
+from src.fetchers import fetch_rundown_ai, fetch_tldr_ai, fetch_superhuman_ai, fetch_neuron_ai
 from src.digest import build_digest
 from src.email_template import render_html, render_plain_text
 from src.mailer import send_email
@@ -39,16 +39,17 @@ def main() -> int:
         "The Rundown AI": fetch_rundown_ai(),
         "TLDR AI":        fetch_tldr_ai(),
         "Superhuman AI":  fetch_superhuman_ai(),
+        "The Neuron":     fetch_neuron_ai(),
     }
 
     successful = sum(1 for v in newsletters.values() if v and len(v) > 100)
     if successful < 2:
         logger.error(
-            "Only fetched %d/3 newsletters — not enough content to build a digest.",
+            "Only fetched %d/4 newsletters — not enough content to build a digest.",
             successful,
         )
         return 1
-    logger.info("Fetched %d/3 newsletters.", successful)
+    logger.info("Fetched %d/4 newsletters.", successful)
 
     digest = build_digest(config, newsletters)
     if not digest:

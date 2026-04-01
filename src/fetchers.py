@@ -1,4 +1,4 @@
-"""Newsletter fetchers for The Rundown AI, TLDR AI, and Superhuman AI.
+"""Newsletter fetchers for The Rundown AI, TLDR AI, Superhuman AI, and The Neuron.
 
 All requests use a shared SSL context built from the certifi certificate bundle,
 which resolves the SSL certificate verification errors common on macOS.
@@ -112,3 +112,25 @@ def fetch_superhuman_ai() -> str:
             logger.info("  Found issue: %s", links[0])
             return _fetch_text(links[0])
     return _fetch_text("https://www.superhuman.ai")
+
+
+def fetch_neuron_ai() -> str:
+    """Fetch the latest issue of The Neuron."""
+    logger.info("Fetching The Neuron...")
+    archive_html = _fetch_raw("https://www.theneurondaily.com/archive")
+    if archive_html:
+        # Links may be absolute or relative paths.
+        slugs = re.findall(r'href="(/p/[^"]+)"', archive_html)
+        absolute = re.findall(
+            r'href="(https://www\.theneurondaily\.com/p/[^"]+)"', archive_html
+        )
+        if absolute:
+            url = absolute[0]
+        elif slugs:
+            url = f"https://www.theneurondaily.com{slugs[0]}"
+        else:
+            url = None
+        if url:
+            logger.info("  Found issue: %s", url)
+            return _fetch_text(url)
+    return _fetch_text("https://www.theneurondaily.com")
