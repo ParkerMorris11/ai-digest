@@ -13,14 +13,14 @@ Runs on your Mac with a single cron job. No subscriptions, no SaaS dependencies 
 ```
 ┌──────────────────────────────────────────────────────────────┐
 │                        8:00 AM                               │
-│                    macOS triggers                             │
-│                    launchd job                                │
+│                   macOS triggers                             │
+│                   launchd job                                │
 └──────────────┬───────────────────────────────────────────────┘
                │
                ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                     FETCH                                     │
-│                                                               │
+│                    FETCH                                     │
+│                                                              │
 │   The Rundown AI ──┐                                         │
 │   Superhuman AI  ──┼──▶  Raw newsletter text (3 sources)     │
 │   TLDR AI ─────────┘                                         │
@@ -28,14 +28,14 @@ Runs on your Mac with a single cron job. No subscriptions, no SaaS dependencies 
                │
                ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                   ANALYZE                                     │
-│                                                               │
-│   Claude Sonnet receives:                                     │
-│   • Combined newsletter content                               │
-│   • Your consulting niche description                         │
-│                                                               │
-│   Claude returns structured JSON:                             │
-│   • Deduplicated stories across sources                       │
+│                   ANALYZE                                    │
+│                                                              │
+│   Claude Sonnet receives:                                    │
+│   • Combined newsletter content                              │
+│   • Your consulting niche description                        │
+│                                                              │
+│   Claude returns structured JSON:                            │
+│   • Deduplicated stories across sources                      │
 │   • Relevance score (1–5) per story                          │
 │   • "Why it matters" for your niche                          │
 │   • 2–3 specific action items                                │
@@ -43,8 +43,8 @@ Runs on your Mac with a single cron job. No subscriptions, no SaaS dependencies 
                │
                ▼
 ┌──────────────────────────────────────────────────────────────┐
-│                   DELIVER                                     │
-│                                                               │
+│                   DELIVER                                    │
+│                                                              │
 │   • Formatted HTML email → your inbox                        │
 │   • Plain text fallback for any email client                 │
 │   • Local archive saved to ~/.ai-digest/digests/             │
