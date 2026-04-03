@@ -31,13 +31,15 @@ Runs on your Mac with a single cron job. No subscriptions, no SaaS dependencies 
 ┌──────────────────────────────────────────────────────────────┐
 │                   ANALYZE                                    │
 │                                                              │
-│   Claude Sonnet receives:                                    │
-│   • Combined newsletter content                              │
+│   Claude receives:                                           │
+│   • Combined newsletter content (token-trimmed)              │
 │   • Your consulting niche description                        │
+│   • Model auto-selected: Sonnet (Mon) / Haiku (Tue–Fri)     │
 │                                                              │
 │   Claude returns structured JSON:                            │
 │   • Deduplicated stories across sources                      │
 │   • Relevance score (1–5) per story                          │
+│   • Category tags (tools, research, enterprise, etc.)        │
 │   • "Why it matters" for your niche                          │
 │   • 2–3 specific action items                                │
 └──────────────┬───────────────────────────────────────────────┘
@@ -46,7 +48,7 @@ Runs on your Mac with a single cron job. No subscriptions, no SaaS dependencies 
 ┌──────────────────────────────────────────────────────────────┐
 │                   DELIVER                                    │
 │                                                              │
-│   • Formatted HTML email → your inbox                        │
+│   • HTML email with TOC, tag pills, score badges             │
 │   • Plain text fallback for any email client                 │
 │   • Local archive saved to ~/.ai-digest/digests/             │
 └──────────────────────────────────────────────────────────────┘
@@ -74,8 +76,9 @@ AI Digest uses the Anthropic API. Here's what a typical run costs:
 |-----------|-------|-------------|
 | Weekdays (260 runs/yr) | Claude Sonnet 4.6 | **~$16.38** |
 | Weekdays (260 runs/yr) | Claude Haiku 4.5 | **~$5.46** |
+| Weekdays (260 runs/yr) | Two-tier (Sonnet Mon + Haiku Tue–Fri) | **~$7.64** |
 
-To switch to Haiku for lower cost, change `_MODEL` in `src/digest.py` to `"claude-haiku-4-20250506"`.
+The default configuration uses a **two-tier model strategy**: Sonnet on Mondays for a deep-dive start to the week, Haiku the rest of the week for cost efficiency. Configure this in `config.json`.
 
 ### What Else You Need
 
@@ -110,7 +113,10 @@ pip3 install certifi
 # Run interactive setup (saves to ~/.ai-digest/config.json)
 python3 setup_config.py
 
-# Test it
+# Test it (dry run — no email sent)
+python3 main.py --dry-run
+
+# Full run (fetches, analyzes, emails)
 python3 main.py
 
 # Schedule it (weekdays at 8 AM)
@@ -165,6 +171,14 @@ Each story is scored 1–5 based on your configured niche:
 
 Stories scored 3–5 appear in the **Top Stories** section with full summaries. Stories scored 1–2 appear in **Quick Scan** as one-liners.
 
+### Story Tags
+
+Each story is tagged with 1–2 categories for visual scanning:
+
+`tools` · `research` · `infrastructure` · `funding` · `policy` · `product` · `strategy` · `automation` · `open-source` · `enterprise`
+
+Tags appear as colored pills next to the relevance badge in the email.
+
 ---
 
 ## Configuration
@@ -177,11 +191,22 @@ All configuration is stored in `~/.ai-digest/config.json`:
   "gmail_address": "you@gmail.com",
   "gmail_app_password": "abcd efgh ijkl mnop",
   "recipient_email": "you@gmail.com",
-  "consulting_niche": "AI consulting firm helping businesses implement AI tools..."
+  "consulting_niche": "AI consulting firm helping businesses implement AI tools...",
+  "default_model": "claude-haiku-4-20250506",
+  "sonnet_days": [0]
 }
 ```
 
-You can also set values via environment variables: `ANTHROPIC_API_KEY`, `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`, `DIGEST_RECIPIENT`, `DIGEST_NICHE`.
+### Model Strategy
+
+| Key | Default | Description |
+|-----|---------|-------------|
+| `default_model` | `claude-haiku-4-20250506` | Model used on most days |
+| `sonnet_days` | `[0]` (Monday) | Days to use Sonnet instead (0=Mon, 1=Tue, … 6=Sun) |
+
+Set `sonnet_days` to `[]` for Haiku every day, or `[0, 1, 2, 3, 4]` for Sonnet every weekday.
+
+You can also set values via environment variables: `ANTHROPIC_API_KEY`, `GMAIL_ADDRESS`, `GMAIL_APP_PASSWORD`, `DIGEST_RECIPIENT`, `DIGEST_NICHE`, `DIGEST_MODEL`.
 
 To re-run setup: `python3 setup_config.py`
 
@@ -192,6 +217,7 @@ To re-run setup: `python3 setup_config.py`
 | Action | Command |
 |--------|---------|
 | Run manually | `python3 main.py` |
+| Dry run (no email) | `python3 main.py --dry-run` |
 | View logs | `cat ~/.ai-digest/logs/digest.log` |
 | Browse past digests | `ls ~/.ai-digest/digests/` |
 | Open today's digest in browser | `open ~/.ai-digest/digests/$(date +%Y-%m-%d).html` |
@@ -221,7 +247,7 @@ The agent fetches the latest issue from each source's public archive. If a sourc
 
 **Add newsletter sources** — Add a new fetch function in `src/fetchers.py` and include it in the `newsletters` dict in `main.py`.
 
-**Swap the model** — Change `_MODEL` in `src/digest.py`. Use `claude-haiku-4-20250506` for lower cost or `claude-opus-4-20250514` for highest quality.
+**Swap the model** — Change `default_model` in `~/.ai-digest/config.json`. Use `claude-haiku-4-20250506` for lower cost or `claude-sonnet-4-20250514` for highest quality. Use `sonnet_days` to control which days get the premium model.
 
 **Change the schedule** — Edit the `Hour` and `Minute` values in the launchd plist at `~/Library/LaunchAgents/com.ai-digest.daily.plist`, then run:
 

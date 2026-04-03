@@ -10,6 +10,11 @@ Design principles:
   - Stories separated by thin rules, not cards or colored boxes
   - Generous whitespace; 560 px max width
   - No emoji, no heavy gradients, no dark header bars
+
+v2 additions:
+  - Per-story tag pills with a muted color palette
+  - Mini table-of-contents at the top linking to sections
+  - Model indicator in footer (Haiku vs Sonnet)
 """
 
 
@@ -26,15 +31,26 @@ _TEAL        = "#01696F"
 _FONT_STACK  = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
 
 
+# ── Tag pill color map ────────────────────────────────────────────────────────
+#  Each tag gets a (text-color, background-color) pair — all deliberately muted
+#  so they don't overpower the score badge.
+
+_TAG_COLORS = {
+    "tools":          ("#4A6741", "#E8F0E5"),
+    "research":       ("#5B4A8A", "#EEEAF5"),
+    "infrastructure": ("#6B5B3A", "#F2EDE3"),
+    "funding":        ("#2A6B5C", "#E0F2ED"),
+    "policy":         ("#8A4A4A", "#F5E8E8"),
+    "product":        ("#3A5A8A", "#E3EDF5"),
+    "strategy":       ("#7A5A2A", "#F5EFE0"),
+    "automation":     ("#01696F", "#E3F1F2"),
+    "open-source":    ("#5A6A4A", "#ECF0E6"),
+    "enterprise":     ("#4A5A6A", "#E6ECF0"),
+    "general":        ("#7A7974", "#EFEFED"),
+}
+
+
 # ── HTML skeleton ─────────────────────────────────────────────────────────────
-#
-# Placeholders (all lowercase, underscore-separated):
-#   {date_string}        — e.g. "April 1, 2026"
-#   {story_count}        — total stories fetched
-#   {relevant_count}     — stories scored 4 or 5
-#   {top_stories_rows}   — assembled <tr> blocks for top stories
-#   {quick_scan_rows}    — assembled <tr> blocks for quick scan
-#   {action_items_rows}  — assembled <tr> blocks for action items
 
 _HTML_SKELETON = """\
 <!DOCTYPE html>
@@ -73,9 +89,30 @@ _HTML_SKELETON = """\
 
           <!-- Divider -->
           <tr>
-            <td style="padding:0 0 32px 0;">
+            <td style="padding:0 0 24px 0;">
               <table width="100%" cellpadding="0" cellspacing="0" border="0">
                 <tr><td style="height:1px; background-color:{rule}; font-size:0; line-height:0;">&nbsp;</td></tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- ── Table of Contents ── -->
+          <tr>
+            <td style="padding:0 0 28px 0;">
+              <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                     style="background-color:{card_bg}; border:1px solid {rule_light}; border-radius:8px;">
+                <tr>
+                  <td style="padding:16px 20px;">
+                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="font-size:10px; font-weight:700; color:{secondary}; letter-spacing:2px; text-transform:uppercase; padding-bottom:10px;">
+                          In This Issue
+                        </td>
+                      </tr>
+                      {toc_rows}
+                    </table>
+                  </td>
+                </tr>
               </table>
             </td>
           </tr>
@@ -152,7 +189,7 @@ _HTML_SKELETON = """\
                 <tr><td style="height:1px; background-color:{rule_light}; font-size:0; line-height:0; margin-bottom:20px;">&nbsp;</td></tr>
               </table>
               <p style="margin:16px 0 0; font-size:11px; color:{muted};">
-                Curated by Claude &middot; Filtered for your consulting practice
+                Curated by Claude{model_label} &middot; Filtered for your consulting practice
               </p>
             </td>
           </tr>
@@ -170,11 +207,17 @@ _HTML_SKELETON = """\
 
 # ── Row fragment templates ────────────────────────────────────────────────────
 
+_TAG_PILL = (
+    '<span style="display:inline-block; font-size:10px; font-weight:600; '
+    'color:{tag_fg}; background:{tag_bg}; padding:2px 8px; border-radius:3px; '
+    'letter-spacing:0.3px; margin-right:5px;">{tag_label}</span>'
+)
+
 _STORY_ROW_FIRST = """\
 <tr>
   <td style="padding:0 0 24px 0;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr><td style="padding:0 0 10px 0;">{score_badge}</td></tr>
+      <tr><td style="padding:0 0 10px 0;">{score_badge} {tag_pills}</td></tr>
       <tr><td style="font-size:17px; font-weight:600; color:{text}; line-height:1.35; padding:0 0 7px 0;">{headline}</td></tr>
       <tr><td style="font-size:13px; color:{teal}; line-height:1.5; padding:0 0 9px 0;">{why_it_matters}</td></tr>
       <tr><td style="font-size:14px; color:{secondary}; line-height:1.65; padding:0 0 8px 0;">{summary}</td></tr>
@@ -187,7 +230,7 @@ _STORY_ROW = """\
 <tr>
   <td style="padding:24px 0 24px 0; border-top:1px solid {rule_light};">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr><td style="padding:0 0 10px 0;">{score_badge}</td></tr>
+      <tr><td style="padding:0 0 10px 0;">{score_badge} {tag_pills}</td></tr>
       <tr><td style="font-size:17px; font-weight:600; color:{text}; line-height:1.35; padding:0 0 7px 0;">{headline}</td></tr>
       <tr><td style="font-size:13px; color:{teal}; line-height:1.5; padding:0 0 9px 0;">{why_it_matters}</td></tr>
       <tr><td style="font-size:14px; color:{secondary}; line-height:1.65; padding:0 0 8px 0;">{summary}</td></tr>
@@ -205,6 +248,7 @@ _QUICK_SCAN_ROW = """\
           <span style="font-weight:600;">{headline}</span>
           <span style="color:{muted};"> &mdash; </span>
           <span style="color:{secondary};">{one_liner}</span>
+          <br>{tag_pills}
         </td>
         <td width="90" align="right" valign="top" style="font-size:11px; color:{muted}; white-space:nowrap; padding-left:14px;">
           {source}
@@ -218,6 +262,14 @@ _ACTION_ROW = """\
 <tr>
   <td style="padding:6px 0; font-size:14px; color:{text}; line-height:1.65;">
     <span style="color:{teal}; font-weight:600; margin-right:7px;">&#8250;</span>{item}
+  </td>
+</tr>"""
+
+_TOC_ROW = """\
+<tr>
+  <td style="padding:3px 0; font-size:13px; color:{text}; line-height:1.5;">
+    <span style="color:{teal}; font-weight:600; margin-right:6px;">&#8250;</span>{headline}
+    <span style="color:{muted}; font-size:11px; margin-left:4px;">{score}/5</span>
   </td>
 </tr>"""
 
@@ -248,6 +300,30 @@ def _score_badge(score: int) -> str:
     )
 
 
+def _tag_pills(tags: list[str]) -> str:
+    """Render a row of small colored pills for story tags."""
+    pills = []
+    for tag in tags[:2]:  # max 2 tags
+        fg, bg = _TAG_COLORS.get(tag, ("#7A7974", "#EFEFED"))
+        pills.append(_TAG_PILL.format(tag_fg=fg, tag_bg=bg, tag_label=tag))
+    return " ".join(pills)
+
+
+def _build_toc_rows(stories: list[dict]) -> str:
+    """Build a mini table-of-contents from top stories."""
+    rows = [
+        _TOC_ROW.format(
+            headline=story.get("headline", ""),
+            score=story.get("score", 3),
+            text=_TEXT,
+            teal=_TEAL,
+            muted=_MUTED,
+        )
+        for story in stories[:6]  # cap TOC at 6 items
+    ]
+    return "\n".join(rows)
+
+
 def _build_top_stories_rows(stories: list[dict]) -> str:
     rows: list[str] = []
     for i, story in enumerate(stories):
@@ -255,6 +331,7 @@ def _build_top_stories_rows(stories: list[dict]) -> str:
         rows.append(
             template.format(
                 score_badge=_score_badge(story.get("score", 3)),
+                tag_pills=_tag_pills(story.get("tags", [])),
                 headline=story.get("headline", ""),
                 why_it_matters=story.get("why_it_matters", ""),
                 summary=story.get("summary", ""),
@@ -274,6 +351,7 @@ def _build_quick_scan_rows(items: list[dict]) -> str:
         _QUICK_SCAN_ROW.format(
             headline=item.get("headline", ""),
             one_liner=item.get("one_liner", ""),
+            tag_pills=_tag_pills(item.get("tags", [])),
             source=item.get("source", ""),
             text=_TEXT,
             secondary=_SECONDARY,
@@ -291,6 +369,16 @@ def _build_action_rows(items: list[str]) -> str:
         for item in items
     ]
     return "\n".join(rows)
+
+
+def _model_label(digest: dict) -> str:
+    """Return a short model label for the footer, or empty string."""
+    model = digest.get("_model", "")
+    if "sonnet" in model:
+        return " (Sonnet)"
+    elif "haiku" in model:
+        return " (Haiku)"
+    return ""
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -320,9 +408,11 @@ def render_html(digest: dict, date_string: str) -> str:
         date_string=date_string,
         story_count=story_count,
         relevant_count=relevant_count,
+        toc_rows=_build_toc_rows(top_stories),
         top_stories_rows=_build_top_stories_rows(top_stories),
         quick_scan_rows=_build_quick_scan_rows(quick_scan),
         action_items_rows=_build_action_rows(action_items),
+        model_label=_model_label(digest),
         bg=_BG,
         text=_TEXT,
         secondary=_SECONDARY,
@@ -342,34 +432,43 @@ def render_plain_text(digest: dict, date_string: str) -> str:
 
     lines = [
         f"AI NEWS DIGEST — {date_string}",
-        "Sources: The Rundown AI | Superhuman AI | TLDR AI",
-        "=" * 52,
+        "Sources: The Rundown AI | Superhuman AI | TLDR AI | The Neuron",
+        "=" * 56,
         "",
-        "TOP STORIES",
-        "",
+        "IN THIS ISSUE",
     ]
+    for story in digest.get("top_stories", [])[:6]:
+        lines.append(f"  › {story.get('headline', '')}  ({story.get('score', '')}/5)")
+    lines += ["", "=" * 56, "", "TOP STORIES", ""]
 
     for story in digest.get("top_stories", []):
         rank    = story.get("rank", "")
         score   = story.get("score", "")
+        tags    = ", ".join(story.get("tags", []))
         sources = ", ".join(story.get("sources", []))
         lines += [
-            f"[#{rank}] {story.get('headline', '')}  ({score}/5)",
+            f"[#{rank}] {story.get('headline', '')}  ({score}/5)  [{tags}]",
             f"  > {story.get('why_it_matters', '')}",
             f"  {story.get('summary', '')}",
             f"  — {sources}",
             "",
         ]
 
-    lines += ["-" * 52, "QUICK SCAN", ""]
+    lines += ["-" * 56, "QUICK SCAN", ""]
     for item in digest.get("quick_scan", []):
+        tags = ", ".join(item.get("tags", []))
         lines.append(
             f"  - {item.get('headline', '')} — {item.get('one_liner', '')} "
-            f"({item.get('source', '')}, {item.get('score', '')}/5)"
+            f"[{tags}] ({item.get('source', '')}, {item.get('score', '')}/5)"
         )
 
-    lines += ["", "-" * 52, "ACTION ITEMS", ""]
+    lines += ["", "-" * 56, "ACTION ITEMS", ""]
     for item in digest.get("action_items", []):
-        lines.append(f"  > {item}")
+        lines.append(f"  › {item}")
+
+    model = digest.get("_model", "")
+    if model:
+        short = "Sonnet" if "sonnet" in model else "Haiku" if "haiku" in model else model
+        lines += ["", f"— Curated by Claude ({short})"]
 
     return "\n".join(lines)

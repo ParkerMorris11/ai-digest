@@ -4,8 +4,13 @@
 Fetches the latest issues of The Rundown AI, TLDR AI, Superhuman AI, and
 The Neuron, builds a curated digest via Claude, and emails it to the
 configured recipient. A local copy is saved to ~/.ai-digest/digests/.
+
+Usage:
+    python3 main.py              # full run: fetch → digest → email
+    python3 main.py --dry-run    # skip sending email; writes HTML to stdout
 """
 
+import argparse
 import logging
 import sys
 from datetime import date
@@ -27,6 +32,14 @@ logger = logging.getLogger(__name__)
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description="AI Digest — daily AI news curator")
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Build the digest but skip sending email. Writes HTML to stdout.",
+    )
+    args = parser.parse_args()
+
     logger.info("AI News Digest — %s", date.today().strftime("%B %d, %Y"))
 
     try:
@@ -60,12 +73,18 @@ def main() -> int:
     html_body  = render_html(digest, today_str)
     plain_body = render_plain_text(digest, today_str)
 
+    # Always save a local copy.
     digest_dir = CONFIG_DIR / "digests"
     digest_dir.mkdir(parents=True, exist_ok=True)
     iso = date.today().isoformat()
     (digest_dir / f"{iso}.txt").write_text(plain_body)
     (digest_dir / f"{iso}.html").write_text(html_body)
     logger.info("Saved digest to %s", digest_dir)
+
+    if args.dry_run:
+        logger.info("Dry run — skipping email. HTML written to stdout.")
+        print(html_body)
+        return 0
 
     subject = f"AI Digest — {today_str}"
     send_email(config, subject, html_body, plain_body)

@@ -14,6 +14,9 @@ _DEFAULT_NICHE = (
     "workflow automation, AI platforms, enterprise AI adoption, and AI strategy consulting"
 )
 
+_MODEL_SONNET = "claude-sonnet-4-20250514"
+_MODEL_HAIKU  = "claude-haiku-4-20250506"
+
 
 @dataclass
 class Config:
@@ -22,6 +25,8 @@ class Config:
     gmail_app_password: str
     recipient_email: str
     consulting_niche: str = field(default=_DEFAULT_NICHE)
+    default_model: str = field(default=_MODEL_HAIKU)
+    sonnet_days: list = field(default_factory=lambda: [0])  # 0=Monday
 
 
 class ConfigError(Exception):
@@ -43,12 +48,23 @@ def load_config() -> Config:
     def get(key: str, env_var: str, default: str = "") -> str:
         return stored.get(key) or os.environ.get(env_var) or default
 
+    # Parse sonnet_days from config: supports list of ints or comma-separated string.
+    raw_sonnet = stored.get("sonnet_days", [0])
+    if isinstance(raw_sonnet, str):
+        sonnet_days = [int(d.strip()) for d in raw_sonnet.split(",") if d.strip().isdigit()]
+    elif isinstance(raw_sonnet, list):
+        sonnet_days = [int(d) for d in raw_sonnet]
+    else:
+        sonnet_days = [0]
+
     config = Config(
         anthropic_api_key=get("anthropic_api_key", "ANTHROPIC_API_KEY"),
         gmail_address=get("gmail_address", "GMAIL_ADDRESS"),
         gmail_app_password=get("gmail_app_password", "GMAIL_APP_PASSWORD"),
         recipient_email=get("recipient_email", "DIGEST_RECIPIENT"),
         consulting_niche=get("consulting_niche", "DIGEST_NICHE", _DEFAULT_NICHE),
+        default_model=get("default_model", "DIGEST_MODEL", _MODEL_HAIKU),
+        sonnet_days=sonnet_days,
     )
 
     missing = [
@@ -84,6 +100,8 @@ def save_config(config: Config) -> None:
                 "gmail_app_password": config.gmail_app_password,
                 "recipient_email": config.recipient_email,
                 "consulting_niche": config.consulting_niche,
+                "default_model": config.default_model,
+                "sonnet_days": config.sonnet_days,
             },
             fh,
             indent=2,
