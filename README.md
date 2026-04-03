@@ -74,8 +74,8 @@ AI Digest uses the Anthropic API. Here's what a typical run costs:
 
 | Frequency | Model | Annual Cost |
 |-----------|-------|-------------|
-| Weekdays (260 runs/yr) | Claude Sonnet 4.6 | **~$16.38** |
-| Weekdays (260 runs/yr) | Claude Haiku 4.5 | **~$5.46** |
+| Weekdays (260 runs/yr) | Claude Sonnet 4.6 (`claude-sonnet-4-6`) | **~$16.38** |
+| Weekdays (260 runs/yr) | Claude Haiku 4.5 (`claude-haiku-4-5-20251001`) | **~$5.46** |
 | Weekdays (260 runs/yr) | Two-tier (Sonnet Mon + Haiku Tue–Fri) | **~$7.64** |
 
 The default configuration uses a **two-tier model strategy**: Sonnet on Mondays for a deep-dive start to the week, Haiku the rest of the week for cost efficiency. Configure this in `config.json`.
@@ -192,7 +192,7 @@ All configuration is stored in `~/.ai-digest/config.json`:
   "gmail_app_password": "abcd efgh ijkl mnop",
   "recipient_email": "you@gmail.com",
   "consulting_niche": "AI consulting firm helping businesses implement AI tools...",
-  "default_model": "claude-haiku-4-20250506",
+  "default_model": "claude-haiku-4-5-20251001",
   "sonnet_days": [0]
 }
 ```
@@ -201,7 +201,7 @@ All configuration is stored in `~/.ai-digest/config.json`:
 
 | Key | Default | Description |
 |-----|---------|-------------|
-| `default_model` | `claude-haiku-4-20250506` | Model used on most days |
+| `default_model` | `claude-haiku-4-5-20251001` | Model used on most days |
 | `sonnet_days` | `[0]` (Monday) | Days to use Sonnet instead (0=Mon, 1=Tue, … 6=Sun) |
 
 Set `sonnet_days` to `[]` for Haiku every day, or `[0, 1, 2, 3, 4]` for Sonnet every weekday.
@@ -247,7 +247,7 @@ The agent fetches the latest issue from each source's public archive. If a sourc
 
 **Add newsletter sources** — Add a new fetch function in `src/fetchers.py` and include it in the `newsletters` dict in `main.py`.
 
-**Swap the model** — Change `default_model` in `~/.ai-digest/config.json`. Use `claude-haiku-4-20250506` for lower cost or `claude-sonnet-4-20250514` for highest quality. Use `sonnet_days` to control which days get the premium model.
+**Swap the model** — Change `default_model` in `~/.ai-digest/config.json`. Use `claude-haiku-4-5-20251001` for lower cost or `claude-sonnet-4-6` for highest quality. Use `sonnet_days` to control which days get the premium model.
 
 **Change the schedule** — Edit the `Hour` and `Minute` values in the launchd plist at `~/Library/LaunchAgents/com.ai-digest.daily.plist`, then run:
 

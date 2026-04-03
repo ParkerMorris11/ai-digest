@@ -14,8 +14,8 @@ _DEFAULT_NICHE = (
     "workflow automation, AI platforms, enterprise AI adoption, and AI strategy consulting"
 )
 
-_MODEL_SONNET = "claude-sonnet-4-20250514"
-_MODEL_HAIKU  = "claude-haiku-4-20250506"
+_MODEL_SONNET = "claude-sonnet-4-6"
+_MODEL_HAIKU  = "claude-haiku-4-5-20251001"
 
 
 @dataclass
