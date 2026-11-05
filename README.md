@@ -1,10 +1,33 @@
 # AI Digest
 
-A self-hosted Python agent that reads four AI newsletters every morning, filters and ranks stories by relevance to your professional focus, and emails you a curated briefing before your day starts.
+> A self-hosted agent that turns four AI newsletters into one personalized morning email briefing.
 
-Runs on your Mac with a single cron job. No subscriptions, no SaaS dependencies — just a Python script, an API key, and your Gmail account.
+**Status:** Working · **Built with:** Python, Claude API, Gmail SMTP, macOS launchd
+
+---
+
+## Overview
+
+Keeping up with AI news means skimming several overlapping newsletters every day. AI Digest reads four of them each weekday morning, uses Claude to remove duplicates and score each story for relevance to your focus area, and emails you one briefing before your day starts. It runs on your Mac on a schedule, with no subscriptions or SaaS dependencies.
 
 ![Email preview](docs/email-preview.png)
+
+## Features
+
+- Fetches the latest issue of The Rundown AI, Superhuman AI, TLDR AI and The Neuron
+- Deduplicates stories across sources and scores each one 1–5 for relevance
+- Adds category tags, a "why it matters" note, and 2–3 action items
+- Sends an HTML email with a plain-text fallback and saves a local archive
+- Uses Sonnet on Mondays and Haiku the rest of the week to keep costs low
+
+## Tech stack
+
+| Layer | What it uses |
+|---|---|
+| Language | Python 3.9+ |
+| AI | Anthropic Claude API (structured JSON output) |
+| Delivery | Gmail SMTP with an App Password |
+| Scheduling | macOS launchd |
 
 ---
 
@@ -104,7 +127,7 @@ The default configuration uses a **two-tier model strategy**: Sonnet on Mondays 
 
 ```bash
 # Clone the repository
-git clone https://github.com/YOUR_USERNAME/ai-digest.git
+git clone https://github.com/ParkerMorris11/ai-digest.git
 cd ai-digest
 
 # Install the one dependency
